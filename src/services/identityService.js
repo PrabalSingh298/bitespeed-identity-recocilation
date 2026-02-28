@@ -1,4 +1,5 @@
 const contactModel = require("../models/contactModel");
+const pool = require("../config/db")
 
 async function identifyContact(email, phoneNumber) {
 
@@ -21,13 +22,36 @@ async function identifyContact(email, phoneNumber) {
     }
 
     // Find primary contact (oldest primary)
-    let primary = matches
-        .filter(c => c.linkPrecedence === "primary")
-        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))[0];
+    // let primary = matches
+    //     .filter(c => c.linkPrecedence === "primary")
+    //     .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))[0];
 
-    if (!primary) {
-        primary = matches[0];
+    // if (!primary) {
+    //     primary = matches[0];
+    // }
+
+
+    let primaryContact;
+
+    const primaryFromMatches = matches.find(
+        c => c.linkPrecedence === "primary"
+    );
+
+    if (primaryFromMatches) {
+        primaryContact = primaryFromMatches;
+    } else {
+        // If only secondary found, fetch its primary
+        const secondary = matches[0];
+
+        const [primaryRows] = await pool.query(
+            "SELECT * FROM contacts WHERE id = ?",
+            [secondary.linkedId]
+        );
+
+        primaryContact = primaryRows[0];
     }
+
+
 
     // const emailExists = matches.some(c => c.email === email);
     // const phoneExists = matches.some(c => c.phoneNumber === phoneNumber);
@@ -65,11 +89,11 @@ async function identifyContact(email, phoneNumber) {
             email || null,
             phoneNumber || null,
             "secondary",
-            primary.id
+            primaryContact.id
         );
     }
 
-    const allLinked = await contactModel.findAllLinkedContacts(primary.id);
+    const allLinked = await contactModel.findAllLinkedContacts(primaryContact.id);
 
     const emails = [...new Set(allLinked.map(c => c.email).filter(Boolean))];
     const phoneNumbers = [...new Set(allLinked.map(c => c.phoneNumber).filter(Boolean))];
@@ -78,7 +102,7 @@ async function identifyContact(email, phoneNumber) {
         .map(c => c.id);
 
     return {
-        primaryContactId: primary.id,
+        primaryContactId: primaryContact.id,
         emails,
         phoneNumbers,
         secondaryContactIds: secondaryIds
