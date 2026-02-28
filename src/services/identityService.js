@@ -3,6 +3,9 @@ const pool = require("../config/db")
 
 async function identifyContact(email, phoneNumber) {
 
+    // const email = email1?.trim() || null;
+    // const phoneNumber = phoneNumber1?.trim() || null;
+
     if (!email && !phoneNumber) {
         throw new Error("Either email or phoneNumber must be provided");
     }
@@ -11,7 +14,17 @@ async function identifyContact(email, phoneNumber) {
 
     console.log("Matches:", matches);
 
+    // CASE 1: No existing contact
+    if (matches.length === 0) {
+        const id = await contactModel.createContact(email, phoneNumber, "primary", null);
 
+        return {
+            primaryContactId: id,
+            emails: email ? [email] : [],
+            phoneNumbers: phoneNumber ? [phoneNumber] : [],
+            secondaryContactIds: []
+        };
+    }
 
 
     // Step: Get all related contacts
@@ -69,17 +82,7 @@ async function identifyContact(email, phoneNumber) {
         matches.filter(c => c.linkPrecedence === "primary")
     );
 
-    // CASE 1: No existing contact
-    if (matches.length === 0) {
-        const id = await contactModel.createContact(email, phoneNumber, "primary", null);
 
-        return {
-            primaryContactId: id,
-            emails: email ? [email] : [],
-            phoneNumbers: phoneNumber ? [phoneNumber] : [],
-            secondaryContactIds: []
-        };
-    }
 
     // Find primary contact (oldest primary)
     // let primary = matches
