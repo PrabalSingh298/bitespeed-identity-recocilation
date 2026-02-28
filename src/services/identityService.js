@@ -1,10 +1,10 @@
 const contactModel = require("../models/contactModel");
 const pool = require("../config/db")
 
-async function identifyContact(email, phoneNumber) {
+async function identifyContact(email1, phoneNumber1) {
 
-    // const email = email1?.trim() || null;
-    // const phoneNumber = phoneNumber1?.trim() || null;
+    const email = email1?.trim() || null;
+    const phoneNumber = phoneNumber1?.trim() || null;
 
     if (!email && !phoneNumber) {
         throw new Error("Either email or phoneNumber must be provided");
