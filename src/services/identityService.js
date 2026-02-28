@@ -12,7 +12,7 @@ async function identifyContact(email1, phoneNumber1) {
 
     const matches = await contactModel.findMatchingContacts(email, phoneNumber);
 
-    console.log("Matches:", matches);
+    // console.log("Matches:", matches);
 
     // CASE 1: No existing contact
     if (matches.length === 0) {
@@ -77,10 +77,10 @@ async function identifyContact(email1, phoneNumber1) {
         }
     }
 
-    console.log(
-        "Primary candidates:",
-        matches.filter(c => c.linkPrecedence === "primary")
-    );
+    // console.log(
+    //     "Primary candidates:",
+    //     matches.filter(c => c.linkPrecedence === "primary")
+    // );
 
 
 
