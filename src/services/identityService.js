@@ -9,6 +9,66 @@ async function identifyContact(email, phoneNumber) {
 
     const matches = await contactModel.findMatchingContacts(email, phoneNumber);
 
+    console.log("Matches:", matches);
+
+
+
+
+    // Step: Get all related contacts
+    const contactIds = matches.map(c =>
+        c.linkPrecedence === "primary" ? c.id : c.linkedId
+    );
+
+    const uniquePrimaryIds = [...new Set(contactIds)];
+
+
+
+    const [allContacts] = await pool.query(
+        `SELECT * FROM contacts WHERE id IN (?) OR linkedId IN (?)`,
+        [uniquePrimaryIds, uniquePrimaryIds]
+    );
+
+    // Find all primaries
+    const primaries = allContacts.filter(
+        c => c.linkPrecedence === "primary"
+    );
+
+    // If more than one primary → merge
+    if (primaries.length > 1) {
+
+        primaries.sort(
+            (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+        );
+
+        const oldestPrimary = primaries[0];
+
+        for (let i = 1; i < primaries.length; i++) {
+            const toMerge = primaries[i];
+
+            // Convert primary → secondary
+            await pool.query(
+                `UPDATE contacts
+         SET linkPrecedence = 'secondary',
+             linkedId = ?
+         WHERE id = ?`,
+                [oldestPrimary.id, toMerge.id]
+            );
+
+            // Update all contacts linked to this primary
+            await pool.query(
+                `UPDATE contacts
+         SET linkedId = ?
+         WHERE linkedId = ?`,
+                [oldestPrimary.id, toMerge.id]
+            );
+        }
+    }
+
+    console.log(
+        "Primary candidates:",
+        matches.filter(c => c.linkPrecedence === "primary")
+    );
+
     // CASE 1: No existing contact
     if (matches.length === 0) {
         const id = await contactModel.createContact(email, phoneNumber, "primary", null);
