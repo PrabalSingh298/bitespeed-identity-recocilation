@@ -137,8 +137,11 @@ Table: `contacts`
 ## Notes
 - The API expects `Content-Type: application/json`.
 - Render free tier may take ~20–30 seconds on the first request after inactivity.
-
+- Database credentials are not included for security reasons.
+- Environment variables must be configured separately.
 ---
+
+
 
 ## Author
 Prabal Singh
