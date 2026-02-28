@@ -29,14 +29,41 @@ async function identifyContact(email, phoneNumber) {
         primary = matches[0];
     }
 
+    // const emailExists = matches.some(c => c.email === email);
+    // const phoneExists = matches.some(c => c.phoneNumber === phoneNumber);
+
+    // if (!emailExists || !phoneExists) {
+    //     await createContact(...)
+    // }
+
+
+
     // If new info not already stored → create secondary
-    const emailExists = matches.some(c => c.email === email);
-    const phoneExists = matches.some(c => c.phoneNumber === phoneNumber);
+    // const emailExists = matches.some(c => c.email === email);
+    // const phoneExists = matches.some(c => c.phoneNumber === phoneNumber);
+
+    // if (!emailExists || !phoneExists) {
+    //     await contactModel.createContact(
+    //         email,
+    //         phoneNumber,
+    //         "secondary",
+    //         primary.id
+    //     );
+    // }
+
+
+    const emailExists = email
+        ? matches.some(c => c.email === email)
+        : true;
+
+    const phoneExists = phoneNumber
+        ? matches.some(c => c.phoneNumber === phoneNumber)
+        : true;
 
     if (!emailExists || !phoneExists) {
         await contactModel.createContact(
-            email,
-            phoneNumber,
+            email || null,
+            phoneNumber || null,
             "secondary",
             primary.id
         );
